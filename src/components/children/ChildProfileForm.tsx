@@ -1,11 +1,14 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useWorkspace } from "@/components/providers/WorkspaceProvider";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { Textarea } from "@/components/ui/Textarea";
+import type { ChildGender } from "@/lib/types";
 
 const initialForm = {
   name: "",
@@ -18,17 +21,27 @@ const initialForm = {
 };
 
 export function ChildProfileForm() {
+  const router = useRouter();
+  const { addChildProfile } = useWorkspace();
   const [formData, setFormData] = useState(initialForm);
-  const [submitted, setSubmitted] = useState(false);
 
   function updateField(field: keyof typeof initialForm, value: string) {
     setFormData((current) => ({ ...current, [field]: value }));
-    setSubmitted(false);
   }
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setSubmitted(true);
+
+    addChildProfile({
+      name: formData.name.trim(),
+      gender: formData.gender as ChildGender,
+      age: Number(formData.age),
+      className: formData.className.trim(),
+      parentContact: formData.parentContact.trim(),
+      tags: parseTags(formData.tags),
+      recentObservation: formData.recentObservation.trim(),
+    });
+    router.push("/children");
   }
 
   return (
@@ -104,13 +117,12 @@ export function ChildProfileForm() {
           </label>
 
           <div className="flex flex-col gap-3 sm:flex-row">
-            <Button type="submit">保存本地预览</Button>
+            <Button type="submit">保存档案</Button>
             <Button
               type="button"
               variant="secondary"
               onClick={() => {
                 setFormData(initialForm);
-                setSubmitted(false);
               }}
             >
               清空
@@ -132,11 +144,6 @@ export function ChildProfileForm() {
         <div className="mt-5 rounded-lg bg-slate-50 p-4 text-sm leading-6 text-muted">
           {formData.recentObservation || "最近观察内容会显示在这里。"}
         </div>
-        {submitted ? (
-          <p className="mt-4 rounded-lg bg-teal-50 px-3 py-2 text-sm font-medium text-primary">
-            已生成本地预览，当前版本不会写入数据库。
-          </p>
-        ) : null}
       </Card>
     </div>
   );
@@ -149,4 +156,11 @@ function PreviewRow({ label, value }: { label: string; value: string }) {
       <span className="text-right font-medium text-foreground">{value}</span>
     </div>
   );
+}
+
+function parseTags(value: string) {
+  return value
+    .split(/[,，、\s]+/)
+    .map((tag) => tag.trim())
+    .filter(Boolean);
 }

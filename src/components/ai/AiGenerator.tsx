@@ -1,12 +1,12 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useWorkspace } from "@/components/providers/WorkspaceProvider";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Select } from "@/components/ui/Select";
 import { Textarea } from "@/components/ui/Textarea";
 import {
-  childProfiles,
   generateMockResult,
   generationOptions,
   getGenerationLabel,
@@ -14,12 +14,14 @@ import {
 import type { GenerationType } from "@/lib/types";
 
 export function AiGenerator() {
+  const { addGenerationHistory, childProfiles } = useWorkspace();
   const [generationType, setGenerationType] =
     useState<GenerationType>("dailyObservation");
   const [childId, setChildId] = useState(childProfiles[0]?.id ?? "");
   const [observation, setObservation] = useState("");
   const [result, setResult] = useState("");
   const [copyStatus, setCopyStatus] = useState<"idle" | "copied" | "failed">("idle");
+  const [saveStatus, setSaveStatus] = useState<"idle" | "saved">("idle");
 
   const selectedChild = useMemo(
     () => childProfiles.find((child) => child.id === childId),
@@ -30,14 +32,30 @@ export function AiGenerator() {
     (option) => option.value === generationType
   );
 
+  useEffect(() => {
+    if (!childProfiles.length) {
+      setChildId("");
+      return;
+    }
+
+    if (!childProfiles.some((child) => child.id === childId)) {
+      setChildId(childProfiles[0].id);
+    }
+  }, [childId, childProfiles]);
+
   function handleGenerate() {
+    if (!selectedChild) {
+      return;
+    }
+
     const text = generateMockResult(
       generationType,
       observation,
-      selectedChild?.name ?? ""
+      selectedChild.name
     );
     setResult(text);
     setCopyStatus("idle");
+    setSaveStatus("idle");
   }
 
   async function handleCopy() {
@@ -51,6 +69,20 @@ export function AiGenerator() {
     } catch {
       setCopyStatus("failed");
     }
+  }
+
+  function handleSave() {
+    if (!selectedChild || !result.trim()) {
+      return;
+    }
+
+    addGenerationHistory({
+      generationType,
+      child: selectedChild,
+      observation: observation.trim(),
+      result: result.trim(),
+    });
+    setSaveStatus("saved");
   }
 
   return (
@@ -77,7 +109,13 @@ export function AiGenerator() {
 
           <label className="grid gap-2 text-sm font-medium text-slate-700">
             关联幼儿
-            <Select value={childId} onChange={(event) => setChildId(event.target.value)}>
+            <Select
+              value={childId}
+              onChange={(event) => {
+                setChildId(event.target.value);
+                setSaveStatus("idle");
+              }}
+            >
               {childProfiles.map((child) => (
                 <option key={child.id} value={child.id}>
                   {child.name} · {child.className}
@@ -86,11 +124,45 @@ export function AiGenerator() {
             </Select>
           </label>
 
+          {selectedChild ? (
+            <div className="grid gap-3 rounded-lg bg-slate-50 p-4 text-sm text-slate-700">
+              <div className="flex items-center justify-between gap-4">
+                <span className="text-muted">姓名</span>
+                <span className="font-medium text-foreground">{selectedChild.name}</span>
+              </div>
+              <div className="flex items-center justify-between gap-4">
+                <span className="text-muted">班级</span>
+                <span className="font-medium text-foreground">
+                  {selectedChild.className}
+                </span>
+              </div>
+              <div className="flex items-center justify-between gap-4">
+                <span className="text-muted">年龄</span>
+                <span className="font-medium text-foreground">
+                  {selectedChild.age} 岁
+                </span>
+              </div>
+              <div className="flex items-center justify-between gap-4">
+                <span className="text-muted">状态</span>
+                <span className="font-medium text-foreground">
+                  {selectedChild.status}
+                </span>
+              </div>
+            </div>
+          ) : (
+            <div className="rounded-lg bg-slate-50 p-4 text-sm leading-6 text-muted">
+              暂无幼儿档案，请先新建档案。
+            </div>
+          )}
+
           <label className="grid gap-2 text-sm font-medium text-slate-700">
             观察文字
             <Textarea
               value={observation}
-              onChange={(event) => setObservation(event.target.value)}
+              onChange={(event) => {
+                setObservation(event.target.value);
+                setSaveStatus("idle");
+              }}
               placeholder="例如：今天区域活动时，安安主动邀请同伴一起搭积木，并能说明她想搭一座桥。"
               className="min-h-44"
             />
@@ -99,7 +171,7 @@ export function AiGenerator() {
           <Button
             type="button"
             onClick={handleGenerate}
-            disabled={!observation.trim()}
+            disabled={!selectedChild || !observation.trim()}
           >
             生成 mock 结果
           </Button>
@@ -118,6 +190,13 @@ export function AiGenerator() {
           <div className="flex flex-col gap-2 sm:flex-row">
             <Button
               type="button"
+              onClick={handleSave}
+              disabled={!selectedChild || !result.trim()}
+            >
+              保存历史
+            </Button>
+            <Button
+              type="button"
               variant="secondary"
               onClick={handleCopy}
               disabled={!result}
@@ -130,6 +209,7 @@ export function AiGenerator() {
               onClick={() => {
                 setResult("");
                 setCopyStatus("idle");
+                setSaveStatus("idle");
               }}
               disabled={!result}
             >
@@ -140,9 +220,14 @@ export function AiGenerator() {
 
         <div className="mt-5 min-h-[360px] rounded-lg border border-line bg-slate-50 p-4">
           {result ? (
-            <pre className="whitespace-pre-wrap break-words font-sans text-sm leading-7 text-slate-800">
-              {result}
-            </pre>
+            <Textarea
+              value={result}
+              onChange={(event) => {
+                setResult(event.target.value);
+                setSaveStatus("idle");
+              }}
+              className="min-h-[320px] border-0 bg-transparent p-0 leading-7 shadow-none focus:border-0 focus:ring-0"
+            />
           ) : (
             <div className="flex min-h-[320px] items-center justify-center text-center text-sm text-muted">
               输入观察文字后生成内容。
@@ -156,6 +241,11 @@ export function AiGenerator() {
         {copyStatus === "failed" ? (
           <p className="mt-4 text-sm font-medium text-rose">
             浏览器暂未允许复制，请手动选择结果文本。
+          </p>
+        ) : null}
+        {saveStatus === "saved" ? (
+          <p className="mt-4 text-sm font-medium text-primary">
+            已保存到本地 mock 历史记录。
           </p>
         ) : null}
       </Card>

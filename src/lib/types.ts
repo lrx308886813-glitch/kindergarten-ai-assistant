@@ -43,3 +43,18 @@ export type RecentGeneration = {
   createdAt: string;
   summary: string;
 };
+
+export type GenerationHistoryItem = {
+  id: string;
+  generationType: GenerationType;
+  type: string;
+  childId: string;
+  childName: string;
+  childClassName: string;
+  childAge: number;
+  childStatus: string;
+  observation: string;
+  result: string;
+  summary: string;
+  createdAt: string;
+};

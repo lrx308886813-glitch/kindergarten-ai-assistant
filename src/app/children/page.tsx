@@ -1,6 +1,5 @@
-import { ChildrenTable } from "@/components/children/ChildrenTable";
+import { ChildrenClient } from "@/components/children/ChildrenClient";
 import { Button } from "@/components/ui/Button";
-import { childProfiles } from "@/lib/mock-data";
 
 export default function ChildrenPage() {
   return (
@@ -17,7 +16,7 @@ export default function ChildrenPage() {
         </Button>
       </section>
 
-      <ChildrenTable childrenData={childProfiles} />
+      <ChildrenClient />
     </div>
   );
 }
