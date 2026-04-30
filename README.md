@@ -1,36 +1,58 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 幼师 AI 工作台
 
-## Getting Started
+## 项目简介
 
-First, run the development server:
+幼师 AI 工作台是一个面向幼儿园教师的网页版 MVP，用于管理幼儿档案，并根据教师输入的观察文字生成常用工作文案。
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## 当前 MVP 功能
+
+- 首页 Dashboard
+- 幼儿档案列表
+- 新建幼儿档案表单
+- AI 文案生成页面
+- 支持生成以下类型：
+  - 每日观察记录
+  - 家长沟通文案
+  - 成长档案
+  - 主题活动总结
+  - 教案初稿
+- 显示生成结果
+- 支持复制生成结果
+
+## 技术栈
+
+- Next.js App Router
+- TypeScript
+- Tailwind CSS
+- React
+
+## 本地启动方式
+
+Windows 环境下运行：
+
+```powershell
+npm.cmd run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+启动后访问：
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```text
+http://localhost:3000
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 页面路径
 
-## Learn More
+- `/`：首页 Dashboard
+- `/children`：幼儿档案列表
+- `/children/new`：新建幼儿档案
+- `/ai`：AI 文案生成
 
-To learn more about Next.js, take a look at the following resources:
+## 当前阶段说明
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+当前版本是前端 mock 版本，暂未接数据库，暂未接 OpenAI API。
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 后续计划
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- 接入 OpenAI API
+- 保存生成历史记录
+- 部署到 Vercel
