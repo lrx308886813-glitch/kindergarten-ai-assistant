@@ -50,36 +50,29 @@ type WorkspaceContextValue = {
 const WorkspaceContext = createContext<WorkspaceContextValue | null>(null);
 
 export function WorkspaceProvider({ children }: { children: ReactNode }) {
-  const [childProfiles, setChildProfiles] =
-    useState<ChildProfile[]>(initialChildProfiles);
-  const [generationHistory, setGenerationHistory] = useState<GenerationHistoryItem[]>(
-    []
+  const [childProfiles, setChildProfiles] = useState<ChildProfile[]>(() =>
+    readStoredValue(CHILDREN_STORAGE_KEY, initialChildProfiles)
   );
-  const [hydrated, setHydrated] = useState(false);
-
-  useEffect(() => {
-    setChildProfiles(readStoredValue(CHILDREN_STORAGE_KEY, initialChildProfiles));
-    setGenerationHistory(
+  const [generationHistory, setGenerationHistory] = useState<GenerationHistoryItem[]>(
+    () =>
       readStoredValue(HISTORY_STORAGE_KEY, createInitialGenerationHistory())
-    );
-    setHydrated(true);
-  }, []);
+  );
 
   useEffect(() => {
-    if (!hydrated) {
+    if (typeof window === "undefined") {
       return;
     }
 
     localStorage.setItem(CHILDREN_STORAGE_KEY, JSON.stringify(childProfiles));
-  }, [childProfiles, hydrated]);
+  }, [childProfiles]);
 
   useEffect(() => {
-    if (!hydrated) {
+    if (typeof window === "undefined") {
       return;
     }
 
     localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(generationHistory));
-  }, [generationHistory, hydrated]);
+  }, [generationHistory]);
 
   const addChildProfile = useCallback((input: NewChildProfileInput) => {
     const now = new Date();
@@ -148,6 +141,10 @@ export function useWorkspace() {
 }
 
 function readStoredValue<T>(key: string, fallback: T): T {
+  if (typeof window === "undefined") {
+    return fallback;
+  }
+
   try {
     const rawValue = localStorage.getItem(key);
 

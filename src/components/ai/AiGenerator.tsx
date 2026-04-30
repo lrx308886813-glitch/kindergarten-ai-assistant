@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useWorkspace } from "@/components/providers/WorkspaceProvider";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -24,24 +24,13 @@ export function AiGenerator() {
   const [saveStatus, setSaveStatus] = useState<"idle" | "saved">("idle");
 
   const selectedChild = useMemo(
-    () => childProfiles.find((child) => child.id === childId),
-    [childId]
+    () => childProfiles.find((child) => child.id === childId) ?? childProfiles[0],
+    [childId, childProfiles]
   );
 
   const selectedOption = generationOptions.find(
     (option) => option.value === generationType
   );
-
-  useEffect(() => {
-    if (!childProfiles.length) {
-      setChildId("");
-      return;
-    }
-
-    if (!childProfiles.some((child) => child.id === childId)) {
-      setChildId(childProfiles[0].id);
-    }
-  }, [childId, childProfiles]);
 
   function handleGenerate() {
     if (!selectedChild) {
@@ -110,7 +99,7 @@ export function AiGenerator() {
           <label className="grid gap-2 text-sm font-medium text-slate-700">
             关联幼儿
             <Select
-              value={childId}
+              value={selectedChild?.id ?? ""}
               onChange={(event) => {
                 setChildId(event.target.value);
                 setSaveStatus("idle");
